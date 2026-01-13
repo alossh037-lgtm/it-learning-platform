@@ -1,0 +1,213 @@
+<?php
+require __DIR__ . "/configs/app.php";
+
+$is_course = false;
+$is_skill = false;
+
+if (!isset($_SESSION['login'])) {
+    header("Location: /login.php");
+    exit();
+}
+
+if (isset($_GET["id"]) && !empty($_GET['id']) && !isset($_GET['skill'])) {
+    $is_course = true;
+    $id = $_GET['id'];
+    $sql = "SELECT * FROM `courses` WHERE `id` = '$id'";
+    $query = mysqli_query($con, $sql);
+
+    if (mysqli_num_rows($query) > 0) {
+        $data = mysqli_fetch_assoc($query);
+    }
+} elseif (isset($_GET['id']) && isset($_GET['skill'])) {
+    $is_skill = true;
+    $id = $_GET['id'];
+    $skill_id = $_GET['skill'];
+    $sql = "SELECT * FROM `skills` WHERE `id` = '$skill_id'";
+    $query = mysqli_query($con, $sql);
+
+    if (mysqli_num_rows($query) > 0) {
+        $data = mysqli_fetch_assoc($query);
+    }
+}
+
+?>
+<!DOCTYPE html>
+<html lang="<?= $_SESSION['lang'] == "ar" ? 'ar' : 'en'; ?>" dir="<?= $_SESSION['lang'] == "ar" ? 'rtl' : ''; ?>">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Learning Platform</title>
+    <?php include __DIR__ . "/includes/styles.php"; ?>
+</head>
+
+<body class="">
+
+    <?php include __DIR__ . "/includes/navbar.php"; ?>
+
+    <?php
+    if ($is_course) {
+    ?>
+        <div class="card-header page-top-heading">
+            <div class="container">
+                <h1 class="fw-bold"><?= $data['title'] ?></h1>
+            </div>
+        </div>
+
+        <div class="container">
+            <p><?= $data['description'] ?></p>
+        </div>
+
+        <div class="container mt-4">
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                <?php
+                $sql = "SELECT * FROM `skills` WHERE `course_id` = '$id'";
+                $query = mysqli_query($con, $sql);
+                while ($row = mysqli_fetch_assoc($query)) {
+                ?>
+                    <div class="col">
+                        <div class="card card-border">
+                            <div class="card-body">
+                                <h5 class="card-title fw-semibold text-dark mb-3 pb-2 border-bottom border-2"
+                                    style="border-color: rgba(0, 0, 0, 0.1) !important;">
+                                    <?= $row['title'] ?>
+                                </h5>
+                                <p class="card-text"><?= $row['description'] ?></p>
+                                <a href="/courses.php?id=<?= $id ?>&skill=<?= $row['id']; ?>"
+                                    class="btn btn-outline-success me-2"><?= $lang['details'] ?></a>
+                            </div>
+                        </div>
+                    </div>
+                <?php
+                }
+                ?>
+            </div>
+        </div>
+    <?php
+    } elseif ($is_skill) {
+    ?>
+        <div class="card-header page-top-heading page-special">
+            <div class="container">
+                <h1 class="fw-bold mb-0 text-center py-2"><?= $data['title'] ?></h1>
+            </div>
+        </div>
+
+        <p class="page-description"><b><?= $data['description'] ?></b></p>
+
+        <div class="page-content" dir="rtl">
+            <?= html_entity_decode($data['content']) ?>
+        </div>
+
+    <?php
+    } else {
+    ?>
+        <div class="card-header page-top-heading">
+            <div class="container-fluid">
+                <h1 class="mb-0"><i class="bi bi-book"></i> <?= $lang['courses'] ?></h1>
+            </div>
+        </div>
+        <div class="container mt-4">
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+
+                <?php
+                $sql = "SELECT * FROM `courses` WHERE `branch` = '$userBranch'";
+                $query = mysqli_query($con, $sql);
+
+                if (mysqli_num_rows($query) > 0) {
+                    while ($row = mysqli_fetch_assoc($query)) {
+
+                ?>
+                        <div class="col">
+                            <div class="card card-border">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-semibold text-dark mb-3 pb-2 border-bottom border-2"
+                                        style="border-color: rgba(0, 0, 0, 0.1) !important;">
+                                        <?= $row['title'] ?>
+                                    </h5>
+                                    <p class="card-text"><?= $row['description'] ?></p>
+                                    <div class="btns" style="display: flex; align-items: center; justify-content: space-between;">
+                                        <a href="/courses.php?id=<?= $row['id'] ?>" class="btn btn-outline-success me-2"><?= $lang['show_course']; ?></a>
+                                        <?php
+                                        if (isset($_SESSION['login'])) {
+                                            $quiz_sql = "SELECT * FROM `quizzes` WHERE `course_id` = '$row[id]'";
+                                            $quiz_query = mysqli_query($con, $quiz_sql);
+                                            $quiz_data = mysqli_fetch_assoc($quiz_query);
+                                        ?>
+                                            <a href="/quiz.php?id=<?= $quiz_data['id'] ?>" class="btn btn-outline-primary me-2"><?= $lang['make']; ?></a>
+                                        <?php
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                <?php
+                    }
+                }
+                ?>
+            </div>
+        </div>
+    <?php
+    }
+    ?>
+    <script src="./assets/js/bootstrap.js"></script>
+
+    <?php include __DIR__ . "/includes/footer.php"; ?>
+
+</body>
+
+</html>
+<?php
+require __DIR__ . "/configs/app.php";
+
+$is_course = false;
+if (isset($_GET["id"]) && !empty($_GET['id'])) {
+    $is_course = true;
+    $id = $_GET['id'];
+    $sql = "SELECT * FROM `blogs` WHERE `id` = '$id'";
+    $query = mysqli_query($con, $sql);
+
+    if (mysqli_num_rows($query) > 0) {
+        $data = mysqli_fetch_assoc($query);
+    }
+}
+
+?>
+<!DOCTYPE html>
+<html lang="<?= $_SESSION['lang'] == "ar" ? 'ar' : 'en'; ?>" dir="<?= $_SESSION['lang'] == "ar" ? 'rtl' : ''; ?>">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Learning Platform | Blogs</title>
+    <?php include __DIR__ . "/includes/styles.php"; ?>
+</head>
+
+<body>
+
+    <?php include __DIR__ . "/includes/navbar.php"; ?>
+
+    <div class="container pt-4">
+
+        <div class="blog-image">
+            <img src="<?= $data['image'] ?>" alt="" width="100%" height="400px">
+        </div>
+
+        <div class="card-header">
+            <div class="container-fluid page-top-heading">
+                <h1 class="fw-bold"><?= $data['title'] ?></h1>
+            </div>
+        </div>
+
+        <div class="page-content" dir="rtl">
+            <?= nl2br(html_entity_decode($data['content'])) ?>
+        </div>
+    </div>
+
+    <script src="./assets/js/bootstrap.js"></script>
+
+    <?php include __DIR__ . "/includes/footer.php"; ?>
+
+</body>
+
+</html>
